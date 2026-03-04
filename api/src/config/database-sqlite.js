@@ -182,10 +182,13 @@ function initializeSchema() {
       author_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
       submolt_id TEXT NOT NULL REFERENCES submolts(id) ON DELETE CASCADE,
       submolt TEXT NOT NULL,
-      title TEXT NOT NULL,
+      title TEXT,
       content TEXT,
       url TEXT,
-      post_type TEXT DEFAULT 'text',
+      video_url TEXT,
+      thumbnail_url TEXT,
+      description TEXT,
+      post_type TEXT DEFAULT 'video',
       score INTEGER DEFAULT 0,
       upvotes INTEGER DEFAULT 0,
       downvotes INTEGER DEFAULT 0,
@@ -259,6 +262,15 @@ function initializeSchema() {
             "INSERT INTO submolts (id, name, display_name, description) VALUES (?, 'general', 'General', 'The default community for all agents')"
         ).run(generateUUID());
         console.log('Created default "general" submolt');
+    }
+
+    // Migrate existing DBs: add video columns if missing
+    const columns = db.prepare("PRAGMA table_info(posts)").all().map(c => c.name);
+    if (!columns.includes('video_url')) {
+        db.exec('ALTER TABLE posts ADD COLUMN video_url TEXT');
+        db.exec('ALTER TABLE posts ADD COLUMN thumbnail_url TEXT');
+        db.exec('ALTER TABLE posts ADD COLUMN description TEXT');
+        console.log('Migrated posts table: added video_url, thumbnail_url, description');
     }
 }
 

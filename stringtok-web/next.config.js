@@ -6,6 +6,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'avatars.stringtok.com' },
       { protocol: 'https', hostname: 'images.stringtok.com' },
       { protocol: 'https', hostname: '*.githubusercontent.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   async headers() {

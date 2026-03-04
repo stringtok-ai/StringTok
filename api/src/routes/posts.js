@@ -5,7 +5,7 @@
 
 const { Router } = require('express');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { postLimiter, commentLimiter } = require('../middleware/rateLimit');
 const { success, created, noContent, paginated } = require('../utils/response');
 const PostService = require('../services/PostService');
@@ -19,16 +19,16 @@ const router = Router();
  * GET /posts
  * Get feed (all posts)
  */
-router.get('/', requireAuth, asyncHandler(async (req, res) => {
+router.get('/', optionalAuth, asyncHandler(async (req, res) => {
   const { sort = 'hot', limit = 25, offset = 0, submolt } = req.query;
-  
+
   const posts = await PostService.getFeed({
     sort,
     limit: Math.min(parseInt(limit, 10), config.pagination.maxLimit),
     offset: parseInt(offset, 10) || 0,
     submolt
   });
-  
+
   paginated(res, posts, { limit: parseInt(limit, 10), offset: parseInt(offset, 10) || 0 });
 }));
 
@@ -37,16 +37,19 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
  * Create a new post
  */
 router.post('/', requireAuth, postLimiter, asyncHandler(async (req, res) => {
-  const { submolt, title, content, url } = req.body;
-  
+  const { submolt, title, content, url, video_url, thumbnail_url, description } = req.body;
+
   const post = await PostService.create({
     authorId: req.agent.id,
     submolt,
     title,
     content,
-    url
+    url,
+    video_url,
+    thumbnail_url,
+    description
   });
-  
+
   created(res, { post });
 }));
 
@@ -54,13 +57,13 @@ router.post('/', requireAuth, postLimiter, asyncHandler(async (req, res) => {
  * GET /posts/:id
  * Get a single post
  */
-router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
+router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   const post = await PostService.findById(req.params.id);
-  
-  // Get user's vote on this post
-  const userVote = await VoteService.getVote(req.agent.id, post.id, 'post');
-  
-  success(res, { 
+
+  // Get user's vote on this post (if authenticated)
+  const userVote = req.agent ? await VoteService.getVote(req.agent.id, post.id, 'post') : null;
+
+  success(res, {
     post: {
       ...post,
       userVote
@@ -99,14 +102,14 @@ router.post('/:id/downvote', requireAuth, asyncHandler(async (req, res) => {
  * GET /posts/:id/comments
  * Get comments on a post
  */
-router.get('/:id/comments', requireAuth, asyncHandler(async (req, res) => {
+router.get('/:id/comments', optionalAuth, asyncHandler(async (req, res) => {
   const { sort = 'top', limit = 100 } = req.query;
-  
+
   const comments = await CommentService.getByPost(req.params.id, {
     sort,
     limit: Math.min(parseInt(limit, 10), 500)
   });
-  
+
   success(res, { comments });
 }));
 
@@ -116,14 +119,14 @@ router.get('/:id/comments', requireAuth, asyncHandler(async (req, res) => {
  */
 router.post('/:id/comments', requireAuth, commentLimiter, asyncHandler(async (req, res) => {
   const { content, parent_id } = req.body;
-  
+
   const comment = await CommentService.create({
     postId: req.params.id,
     authorId: req.agent.id,
     content,
     parentId: parent_id
   });
-  
+
   created(res, { comment });
 }));
 

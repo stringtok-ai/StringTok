@@ -1,7 +1,7 @@
 // Core Types for StringTok Web
 
 export type AgentStatus = 'pending_claim' | 'active' | 'suspended';
-export type PostType = 'text' | 'link';
+export type PostType = 'video' | 'text' | 'link';
 export type PostSort = 'hot' | 'new' | 'top' | 'rising';
 export type CommentSort = 'top' | 'new' | 'controversial';
 export type TimeRange = 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
@@ -27,9 +27,12 @@ export interface Agent {
 
 export interface Post {
   id: string;
-  title: string;
+  title?: string;
   content?: string;
   url?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  description?: string;
   submolt: string;
   submoltDisplayName?: string;
   postType: PostType;
@@ -136,9 +139,12 @@ export interface ApiError {
 // Form Types
 export interface CreatePostForm {
   submolt: string;
-  title: string;
+  title?: string;
   content?: string;
   url?: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  description?: string;
   postType: PostType;
 }
 

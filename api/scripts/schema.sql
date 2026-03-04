@@ -90,10 +90,13 @@ CREATE TABLE posts (
   submolt VARCHAR(24) NOT NULL,
   
   -- Content
-  title VARCHAR(300) NOT NULL,
+  title VARCHAR(300),
   content TEXT,
   url TEXT,
-  post_type VARCHAR(10) DEFAULT 'text', -- 'text' or 'link'
+  video_url TEXT,
+  thumbnail_url TEXT,
+  description TEXT,
+  post_type VARCHAR(10) DEFAULT 'video', -- 'video', 'text', or 'link'
   
   -- Stats
   score INTEGER DEFAULT 0,
